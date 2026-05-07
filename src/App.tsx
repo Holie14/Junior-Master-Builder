@@ -161,8 +161,8 @@ const gameData: Record<Language, GameData> = {
     },
     certificate: {
       title: "JUNIOR MASTER BUILDER CERTIFICATE",
-      congrats: "Congratulations! You are now a Posco Junior Master Builder",
-      welcome: "Thank you for being part of this quest. We are happy to welcome you to our family!",
+      congrats: "Congratulations!\nYou are now a Posco Junior Master Builder",
+      welcome: "Thank you for being part of this quest.\nWe are happy to welcome you to our family!",
       reminder: "Please save this certificate and show it to the Steelworks' Tour Guide (철강해설사) to receive your first Salary!",
       signature: "Park Tae-joon",
       seal: "POSCO MUSEUM",
@@ -251,9 +251,9 @@ const gameData: Record<Language, GameData> = {
       ]
     },
     certificate: {
-      title: "주니어 마스터 빌더 수료증",
-      congrats: "축하합니다! 당신은 이제 포스코 주니어 마스터 빌더입니다.",
-      welcome: "퀘스트에 참여해주셔서 감사합니다. 당신을 포스코의 소중한 가족으로 환영합니다!",
+      title: "포스코 주니어 마스터 빌더 수료증",
+      congrats: "축하합니다!\n당신은 이제 포스코 주니어 마스터 빌더입니다.",
+      welcome: "퀘스트에 참여해주셔서 감사합니다.\n당신을 포스코의 소중한 가족으로 환영합니다!",
       reminder: "수료증을 저장한 후, 철강해설사 선생님께 보여드리고 첫 월급을 받으세요!",
       signature: "박태준",
       seal: "POSCO MUSEUM",
@@ -283,6 +283,7 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [showFeedback, setShowFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const certRef = useRef<HTMLDivElement>(null);
 
   const texts = useMemo(() => gameData[lang], [lang]);
@@ -372,15 +373,35 @@ export default function App() {
   };
 
   const handleDownload = async () => {
-    if (certRef.current === null) return;
+    if (certRef.current === null || isSaving) return;
+    
+    setIsSaving(true);
     try {
-      const dataUrl = await toPng(certRef.current, { cacheBust: true });
+      // Small delay to ensure any animations have settled and names are rendered
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Ensure fonts are ready
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const dataUrl = await toPng(certRef.current, { 
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#f8fafc', // slate-50 background for the certificate
+      });
+      
       const link = document.createElement('a');
-      link.download = `POSCO_MasterBuilder_${userName}.png`;
+      const safeName = (userName || 'JuniorMaster').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      link.download = `POSCO_Certificate_${safeName}.png`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error('Error generating certificate', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -484,7 +505,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="mt-12 text-xs sm:text-sm text-slate-500 font-bold tracking-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]"
+              className="mt-12 text-sm sm:text-base text-slate-700 font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgba(255,255,255,1)]"
             >
                Developed by: JULLIE JEONG, POSCO PR Section
             </motion.div>
@@ -812,7 +833,7 @@ export default function App() {
                 <div 
                   className="absolute inset-0 z-0 pointer-events-none"
                   style={{
-                    backgroundImage: "url('/Junior Master Builder.png')",
+                    backgroundImage: "url('/Junior%20Master%20Builder.png')",
                     backgroundSize: 'contain',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
@@ -834,13 +855,15 @@ export default function App() {
                 </header>
 
                 <div className="relative z-30 mb-4">
-                  <p className="text-[10px] italic text-slate-700 font-bold max-w-[200px] mx-auto">{texts.certificate.congrats}</p>
-                  <h2 className="text-4xl font-serif font-black text-black underline underline-offset-8 mt-2 mb-6 drop-shadow-sm">
+                  <p className="text-[10px] italic text-slate-700 font-bold max-w-[200px] mx-auto whitespace-pre-line leading-relaxed border-b border-[#1861c9] pb-1">
+                    {texts.certificate.congrats}
+                  </p>
+                  <h2 className="text-4xl font-serif font-black text-[#1f04e9] underline underline-offset-8 mt-2 mb-6 drop-shadow-sm">
                     {userName}
                   </h2>
                 </div>
 
-                <p className="relative z-30 text-[11px] leading-relaxed px-4 text-slate-900 mb-8 italic font-medium">
+                <p className="relative z-30 text-[11px] leading-relaxed px-4 text-slate-900 mb-8 italic font-medium whitespace-pre-line text-center">
                   {texts.certificate.welcome}
                 </p>
 
@@ -888,11 +911,21 @@ export default function App() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDownload}
-                className="bg-blue-700 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg"
+                disabled={isSaving}
+                className="bg-blue-700 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-70 disabled:cursor-wait"
                 id="btn-download"
               >
-                <Download size={20} />
-                {texts.certificate.download}
+                {isSaving ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  >
+                    <RefreshCw size={20} />
+                  </motion.div>
+                ) : (
+                  <Download size={20} />
+                )}
+                {isSaving ? (lang === 'ko' ? '저장 중...' : 'Saving...') : texts.certificate.download}
               </motion.button>
               <motion.button 
                 whileHover={{ scale: 1.05, backgroundColor: '#cbd5e1' }}
@@ -913,7 +946,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.8 }}
-              className="mt-10 text-xs sm:text-sm text-slate-500 font-bold tracking-tight drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]"
+              className="mt-10 text-sm sm:text-base text-slate-700 font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgba(255,255,255,1)]"
             >
                Developed by: JULLIE JEONG, POSCO PR Section
             </motion.div>
@@ -1103,10 +1136,10 @@ function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' |
 
 function FactoryBuilding({ currentParts, stage, large }: { currentParts: string[]; stage: 'pohang' | 'gwangyang'; large?: boolean }) {
   const allParts = [
-    { id: 'furnace', img: '/Blast Furnace.png', icon: Factory, color: '#475569', label: 'Blast Furnace' },
-    { id: 'mill', img: '/Basic Oxygen Furnace.png', icon: Settings, color: '#334155', label: 'Basic Oxygen Furnace' },
-    { id: 'port', img: '/Rolling Mill.png', icon: Ship, color: '#0f172a', label: 'Rolling Mill' },
-    { id: 'bridge', img: '/Rolling Mill.png', icon: Building2, color: '#1e293b', label: 'Rolling Mill' }
+    { id: 'furnace', img: '/Blast%20Furnace.png', icon: Factory, color: '#475569', label: 'Blast Furnace' },
+    { id: 'mill', img: '/Basic%20Oxygen%20Furnace.png', icon: Settings, color: '#334155', label: 'Basic Oxygen Furnace' },
+    { id: 'port', img: '/Rolling%20Mill.png', icon: Ship, color: '#0f172a', label: 'Rolling Mill' },
+    { id: 'bridge', img: '/Rolling%20Mill.png', icon: Building2, color: '#1e293b', label: 'Rolling Mill' }
   ];
 
   const stageParts = stage === 'pohang' 
