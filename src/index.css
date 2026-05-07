@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Playfair+Display:ital,wght@0,900;1,900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+:root {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Custom shadow for industrial look */
+.industrial-shadow {
+  box-shadow: 0 4px 0px 0px rgba(0, 75, 147, 0.2);
+}
+
+.certificate-border {
+  border-image: repeating-linear-gradient(45deg, #004b93, #004b93 10px, #ffffff 10px, #ffffff 20px) 20;
+}
