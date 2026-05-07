@@ -409,18 +409,6 @@ export default function App() {
     <div 
       className="fixed inset-0 bg-slate-50 font-sans text-slate-800 overflow-hidden flex flex-col items-center justify-center select-none"
     >
-      {/* Background Image with 30% opacity */}
-      <div 
-        className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
-        style={{
-          backgroundImage: "url('/background.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: 0.3
-        }}
-      />
-      
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
         
@@ -505,7 +493,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="mt-12 text-sm sm:text-base text-slate-700 font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgba(255,255,255,1)]"
+              className="mt-12 text-sm sm:text-base text-[#4169E1] font-light tracking-tight"
             >
                Developed by: JULLIE JEONG, POSCO PR Section
             </motion.div>
@@ -946,7 +934,7 @@ export default function App() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 0.8 }}
-              className="mt-10 text-sm sm:text-base text-slate-700 font-extrabold tracking-tight drop-shadow-[0_2px_2px_rgba(255,255,255,1)]"
+              className="mt-10 text-sm sm:text-base text-[#4169E1] font-light tracking-tight"
             >
                Developed by: JULLIE JEONG, POSCO PR Section
             </motion.div>
@@ -1013,7 +1001,6 @@ function CharacterAvatar({ sm, horizontal, text }: { sm?: boolean; horizontal?: 
         transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
         className={`${sm ? 'w-16 h-16' : 'w-24 h-24'} rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center`}
       >
-        {/* Placeholder for Character Image - using icon for now as build fails image gen */}
         <div className="text-blue-900 bg-blue-50 w-full h-full flex items-center justify-center">
           <User size={sm ? 32 : 48} />
         </div>
@@ -1042,46 +1029,32 @@ function Dialogue({ text, sm }: { text: string; sm?: boolean }) {
 
 function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' | 'gwangyang'; prevLocation?: 'pohang' }) {
   return (
-    <div className="w-full h-full relative bg-[#1c3a5e] overflow-hidden rounded-2xl flex items-center justify-center p-4 border-2 border-white/20">
-      {/* 3D Grid Background mimicking the reference image */}
-      <div 
-        className="absolute inset-4 border border-white/40 pointer-events-none z-10"
-      ></div>
-      <div 
-        className="absolute inset-0 opacity-30 pointer-events-none" 
-        style={{ 
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)', 
-          backgroundSize: '40px 40px',
-          transform: 'perspective(400px) rotateX(45deg) scale(2)',
-          transformOrigin: 'center center'
-        }}
-      ></div>
-
+    <div className="w-full h-full relative bg-transparent overflow-hidden rounded-2xl flex items-center justify-center p-0">
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative w-full h-full flex items-center justify-center"
       >
-        <svg viewBox="0 0 100 120" className="h-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          {/* Stylized Korea Map with "3D" feel */}
-          <path 
-             d="M38 12 L50 10 L65 22 L62 42 L78 58 L72 92 L50 112 L32 102 L28 82 L38 52 L22 42 Z" 
-             fill="#ffffff" 
-             stroke="#e2e8f0" 
-             strokeWidth="0.5"
+        <svg viewBox="0 0 100 120" className="h-full w-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {/* Scaled Korea Map Image */}
+          <image 
+            href="/korean%20map.png" 
+            x="-5" y="-5" 
+            width="110" height="130" 
+            preserveAspectRatio="xMidYMid slice" 
           />
           
           {/* Pohang Marker */}
           <g>
             <circle 
-              cx="70" cy="74" r="3" 
-              fill={prevLocation === 'pohang' || activeLocation === 'pohang' ? COLORS.blue : '#d1d5db'} 
+              cx="78" cy="70" r="3.5" 
+              fill={prevLocation === 'pohang' || activeLocation === 'pohang' ? '#ff2d55' : '#d1d5db'} 
               className="transition-colors duration-500"
             />
             {activeLocation === 'pohang' && (
               <motion.circle 
-                cx="70" cy="74" r="6" 
-                fill="none" stroke={COLORS.accent} strokeWidth="1"
+                cx="78" cy="70" r="7" 
+                fill="none" stroke="#ff2d55" strokeWidth="1"
                 animate={{ scale: [1, 2], opacity: [1, 0] }}
                 transition={{ repeat: Infinity, duration: 1 }}
               />
@@ -1091,14 +1064,14 @@ function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' |
           {/* Gwangyang Marker */}
           <g>
             <circle 
-              cx="50" cy="100" r="3" 
-              fill={activeLocation === 'gwangyang' ? COLORS.blue : '#d1d5db'} 
+              cx="50" cy="90" r="3.5" 
+              fill={activeLocation === 'gwangyang' ? '#007aff' : '#d1d5db'} 
               className="transition-colors duration-500"
             />
             {activeLocation === 'gwangyang' && (
               <motion.circle 
-                cx="50" cy="100" r="6" 
-                fill="none" stroke={COLORS.accent} strokeWidth="1"
+                cx="50" cy="90" r="7" 
+                fill="none" stroke="#007aff" strokeWidth="1"
                 animate={{ scale: [1, 2], opacity: [1, 0] }}
                 transition={{ repeat: Infinity, duration: 1 }}
               />
@@ -1106,15 +1079,21 @@ function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' |
           </g>
 
           {/* Location Labels */}
-          <text x="75" y="74" fontSize="3" fontWeight="bold" fill="white" className="pointer-events-none opacity-80">POHANG</text>
-          <text x="35" y="100" fontSize="3" fontWeight="bold" fill="white" className="pointer-events-none opacity-80">GWANGYANG</text>
+          <g>
+            <rect x="78.5" y="63" width="12" height="4" fill="#22c55e" opacity="0.4" rx="0.5" />
+            <text x="79" y="66" fontSize="3" fontWeight="bold" fill="#004b93" className="pointer-events-none drop-shadow-sm font-sans">POHANG</text>
+          </g>
+          <g>
+            <rect x="41.5" y="83" width="17" height="4" fill="#22c55e" opacity="0.4" rx="0.5" />
+            <text x="42" y="86" fontSize="3" fontWeight="bold" fill="#004b93" className="pointer-events-none drop-shadow-sm font-sans">GWANGYANG</text>
+          </g>
 
           {/* Transition Arrow */}
           {prevLocation === 'pohang' && activeLocation === 'gwangyang' && (
             <motion.path
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
-              d="M66 76 Q55 88 52 96"
+              d="M74 74 Q60 82 53.5 88"
               fill="none"
               stroke={COLORS.accent}
               strokeWidth="1.5"
@@ -1124,8 +1103,8 @@ function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' |
           )}
 
           <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={COLORS.accent} />
+            <marker id="arrowhead" markerWidth="3" markerHeight="2" refX="3" refY="1" orient="auto">
+              <polygon points="0 0, 3 1, 0 2" fill={COLORS.accent} />
             </marker>
           </defs>
         </svg>
