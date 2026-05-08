@@ -560,10 +560,13 @@ export default function App() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { 
+                onClick={async () => { 
                   setLang('ko'); 
                   setState('INTRO'); 
-                  if (!isMuted) soundService.setEnabled(true);
+                  if (!isMuted) {
+                    await soundService.resume();
+                    soundService.setEnabled(true);
+                  }
                 }}
                 className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold shadow-lg"
                 id="btn-ko"
@@ -573,10 +576,13 @@ export default function App() {
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { 
+                onClick={async () => { 
                   setLang('en'); 
                   setState('INTRO'); 
-                  if (!isMuted) soundService.setEnabled(true);
+                  if (!isMuted) {
+                    await soundService.resume();
+                    soundService.setEnabled(true);
+                  }
                 }}
                 className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold shadow-lg"
                 id="btn-en"
@@ -1100,33 +1106,20 @@ export default function App() {
 
 function SteelCoilLogoWithText() {
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="text-slate-300 opacity-30"
-        >
-          <Settings size={140} />
-        </motion.div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-28 h-28 rounded-full border-8 border-slate-200 flex flex-col items-center justify-center bg-slate-50 shadow-inner overflow-hidden">
-             {/* Stylized Coil Spirals */}
-             <div className="w-24 h-24 rounded-full border-2 border-slate-100 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full border-4 border-slate-200 flex items-center justify-center">
-                   <div className="w-10 h-10 rounded-full bg-slate-100"></div>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col items-center gap-2 max-w-full px-4">
+      <img 
+        src="/ptj.png" 
+        alt="POSCO Trophy" 
+        className="h-36 sm:h-48 md:h-56 w-auto object-contain max-w-full" 
+        referrerPolicy="no-referrer" 
+      />
       <div className="flex items-center gap-1">
-        <span className="text-5xl font-black tracking-tighter text-[#004b93] font-sans">
+        <span className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-[#004b93] font-sans">
           POSCO
         </span>
       </div>
       <div className="flex flex-col items-center">
-        <span className="text-xs uppercase tracking-[0.4em] font-bold text-slate-400">Junior Master Builder</span>
+        <span className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.2em] sm:tracking-[0.4em] font-bold text-slate-400 mt-1 text-center">Junior Master Builder</span>
       </div>
     </div>
   );

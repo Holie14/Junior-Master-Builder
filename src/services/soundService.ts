@@ -17,9 +17,16 @@ class SoundService {
     }
   }
 
+  public async resume() {
+    if (!this.audioCtx) this.init();
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      await this.audioCtx.resume();
+    }
+  }
+
   public setEnabled(enabled: boolean) {
     this.isEnabled = enabled;
-    if (enabled) this.init();
+    if (enabled) this.resume();
   }
 
   /* Positive "Uplifting" Chime for correct answers */
