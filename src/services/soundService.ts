@@ -22,6 +22,17 @@ class SoundService {
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       await this.audioCtx.resume();
     }
+    
+    // iOS Safari requires a sound to be played within the user gesture to "unlock" audio
+    if (this.audioCtx && this.audioCtx.state === 'running') {
+      const g = this.audioCtx.createGain();
+      g.gain.setValueAtTime(0.0001, this.audioCtx.currentTime);
+      const osc = this.audioCtx.createOscillator();
+      osc.connect(g);
+      g.connect(this.audioCtx.destination);
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + 0.01);
+    }
   }
 
   public setEnabled(enabled: boolean) {

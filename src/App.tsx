@@ -512,11 +512,13 @@ export default function App() {
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            onClick={() => {
+            onClick={async () => {
               const newMuted = !isMuted;
               setIsMuted(newMuted);
               if (newMuted && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
+              } else if (!newMuted) {
+                await soundService.resume();
               }
             }}
             className="p-3 rounded-full bg-white/80 backdrop-blur border border-blue-100 shadow-lg text-blue-900"
@@ -620,7 +622,10 @@ export default function App() {
               ))}
             </div>
             <button 
-              onClick={() => setState('MAP_POHANG')}
+              onClick={async () => {
+                await soundService.resume();
+                setState('MAP_POHANG');
+              }}
               className="mt-8 bg-orange-500 text-white px-8 py-4 rounded-full text-xl font-bold shadow-lg hover:bg-orange-600 transition-colors"
               id="btn-start"
             >
@@ -649,7 +654,10 @@ export default function App() {
               <CharacterAvatar sm />
               <Dialogue sm text={lang === 'en' ? "Our first stop is Pohang! Let's build our first furnace here." : "먼저 포항으로 가볼까요? 이곳에서 우리의 첫 번째 용광로를 지어봅시다!"} />
               <button 
-                onClick={() => setState('QUEST_POHANG')}
+                onClick={async () => {
+                  await soundService.resume();
+                  setState('QUEST_POHANG');
+                }}
                 className="bg-blue-700 text-white px-10 py-4 rounded-full text-lg font-bold flex items-center gap-2 group"
                 id="btn-goto-pohang"
               >
