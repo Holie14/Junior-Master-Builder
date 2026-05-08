@@ -23,10 +23,14 @@ import {
   Volume2,
   VolumeX,
   Layers,
-  Home
+  Home,
+  Waves,
+  Share2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import confetti from 'canvas-confetti';
+import { soundService } from './services/soundService';
 
 // POSCO BRAND COLORS
 const COLORS = {
@@ -71,7 +75,7 @@ interface GameData {
     congrats: string;
     welcome: string;
     reminder: string;
-    signature: string;
+    signature?: string;
     seal: string;
     download: string;
     restart: string;
@@ -119,7 +123,7 @@ const gameData: Record<Language, GameData> = {
             { label: "Molten Iron", value: "iron", isCorrect: true },
             { label: "Cold Water", value: "water", isCorrect: false }
           ],
-          explanation: "Yes! 쇳물 (Molten Iron) is the start of everything steel.",
+          explanation: "Yes! Molten Iron is the start of everything steel.",
           part: 'port'
         }
       ]
@@ -151,8 +155,8 @@ const gameData: Record<Language, GameData> = {
           id: 6,
           question: "What do we make with our steel?",
           options: [
-            { label: "Cars and Bridges", value: "cars", isCorrect: true },
-            { label: "Paper and Toys", value: "toys", isCorrect: false }
+            { label: "Pizza and Cake", value: "cars", isCorrect: false },
+            { label: "Cars and Bridges", value: "toys", isCorrect: true }
           ],
           explanation: "You got it! Our steel supports the world's cars and massive bridges.",
           part: 'bridge'
@@ -163,8 +167,7 @@ const gameData: Record<Language, GameData> = {
       title: "JUNIOR MASTER BUILDER CERTIFICATE",
       congrats: "Congratulations!\nYou are now a Posco Junior Master Builder",
       welcome: "Thank you for being part of this quest.\nWe are happy to welcome you to our family!",
-      reminder: "Please save this certificate and show it to the Steelworks' Tour Guide (철강해설사) to receive your first Salary!",
-      signature: "Park Tae-joon",
+      reminder: "Please save this certificate and show it to the Steelworks' Tour Guide to receive your first Salary!",
       seal: "POSCO MUSEUM",
       download: "Save Certificate",
       restart: "Play Again"
@@ -188,7 +191,7 @@ const gameData: Record<Language, GameData> = {
           question: "우리 회사의 이름은 무엇일까요?",
           options: [
             { label: "POSCO (포스코)", value: "posco", isCorrect: true },
-            { label: "Steel Center", value: "steel", isCorrect: false }
+            { label: "코스코", value: "steel", isCorrect: false }
           ],
           explanation: "맞아요! 포스코는 1968년 포항에서 시작되었답니다.",
           part: 'furnace'
@@ -197,8 +200,8 @@ const gameData: Record<Language, GameData> = {
           id: 2,
           question: "'우향우 정신'은 무엇을 의미할까요?",
           options: [
-            { label: "책임감과 불굴의 의지", value: "spirit", isCorrect: true },
-            { label: "오른쪽으로 걷기", value: "walk", isCorrect: false }
+            { label: "오른쪽으로 걷기", value: "spirit", isCorrect: false },
+            { label: "책임감과 불굴의 의지", value: "walk", isCorrect: true }
           ],
           explanation: "정답입니다! 실패하면 영일만에 빠지겠다는 정신으로 최선을 다하는 책임감을 말해요.",
           part: 'mill'
@@ -232,8 +235,8 @@ const gameData: Record<Language, GameData> = {
           id: 5,
           question: "왜 바다 옆에 제철소를 지었을까요?",
           options: [
-            { label: "큰 배가 드나들기 위해", value: "ships", isCorrect: true },
-            { label: "수영을 하려고", value: "swim", isCorrect: false }
+            { label: "수영을 하려고", value: "swim", isCorrect: false },
+            { label: "큰 배가 드나들기 위해", value: "ships", isCorrect: true }
           ],
           explanation: "맞아요! 큰 배로 원료를 가져오고 만든 제품을 세계로 보내기 위해서예요.",
           part: 'mill'
@@ -255,7 +258,6 @@ const gameData: Record<Language, GameData> = {
       congrats: "축하합니다!\n당신은 이제 포스코 주니어 마스터 빌더입니다.",
       welcome: "퀘스트에 참여해주셔서 감사합니다.\n당신을 포스코의 소중한 가족으로 환영합니다!",
       reminder: "수료증을 저장한 후, 철강해설사 선생님께 보여드리고 첫 월급을 받으세요!",
-      signature: "박태준",
       seal: "POSCO MUSEUM",
       download: "수료증 저장하기",
       restart: "다시 시작하기"
@@ -317,19 +319,53 @@ export default function App() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Trigger TTS on state change or dialogue update
+  useEffect(() => {
+    soundService.setEnabled(!isMuted);
+    if (!isMuted && (state.startsWith('QUEST') || state.startsWith('MAP') || state === 'INTRO' || state === 'LANG_SELECT')) {
+      soundService.startAmbient();
+    } else {
+      soundService.stopAmbient();
+    }
+  }, [isMuted, state]);
   useEffect(() => {
     if (state === 'INTRO') {
       speakText(texts.intro.description);
     } else if (state === 'MAP_POHANG') {
       speakText(lang === 'en' ? "Our first stop is Pohang! Let's build our first furnace here." : "먼저 포항으로 가볼까요? 이곳에서 우리의 첫 번째 용광로를 지어봅시다!");
     } else if (state === 'MAP_GWANGYANG') {
-      speakText(lang === 'en' ? "Pohang is complete! Now let's go to Gwangyang to build an even bigger steelworks on the sea." : "포항 제철소가 완성되었어요! 이제 광양으로 가서 바다 위에 더 큰 제철소를 지어봅시다!");
+      speakText(lang === 'en' ? "Pohang is complete! Now let's go to Gwang yang to build an even bigger steelworks on the sea." : "포항 제철소가 완성되었어요! 이제 광양으로 가서 바다 위에 더 큰 제철소를 지어봅시다!");
     } else if (state === 'QUEST_POHANG' || state === 'QUEST_GWANGYANG') {
       const stage = state === 'QUEST_POHANG' ? texts.pohang : texts.gwangyang;
       speakText(stage.quest[currentQuestionIndex].question);
     } else if (state === 'CERTIFICATE') {
       speakText(`${texts.certificate.congrats}. ${texts.certificate.reminder}`);
+      soundService.stopAmbient(); // Stop current music to let fanfare shine
+      soundService.playGraduationFanfare();
+      
+      // Dramatic multi-cannon confetti
+      const end = Date.now() + 2.5 * 1000;
+      const colors = [COLORS.blue, COLORS.accent, '#ffffff'];
+
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.8 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.8 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
     }
   }, [state, lang, currentQuestionIndex]);
 
@@ -351,6 +387,7 @@ export default function App() {
     
     const stage = state === 'QUEST_POHANG' ? texts.pohang : texts.gwangyang;
     const part = stage.quest[currentQuestionIndex].part;
+    soundService.playClang();
     setBuiltParts(prev => [...prev, `${state}_${part}`]);
     
     setShowFeedback('correct');
@@ -364,6 +401,7 @@ export default function App() {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
       // Stage Complete
+      soundService.playSuccess();
       if (state === 'QUEST_POHANG') {
         setState('SUCCESS_POHANG');
       } else {
@@ -378,7 +416,7 @@ export default function App() {
     setIsSaving(true);
     try {
       // Small delay to ensure any animations have settled and names are rendered
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Ensure fonts are ready
       if (document.fonts) {
@@ -387,17 +425,51 @@ export default function App() {
 
       const dataUrl = await toPng(certRef.current, { 
         cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: '#f8fafc', // slate-50 background for the certificate
+        pixelRatio: 3, // High quality
+        backgroundColor: '#f8fafc',
       });
       
-      const link = document.createElement('a');
       const safeName = (userName || 'JuniorMaster').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      link.download = `POSCO_Certificate_${safeName}.png`;
+      const fileName = `POSCO_Certificate_${safeName}.png`;
+
+      // Try Web Share API first (better for mobile)
+      if (navigator.share && navigator.canShare) {
+        try {
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], fileName, { type: 'image/png' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'POSCO Certificate',
+              text: 'I became a POSCO Junior Master Builder!',
+            });
+            setIsSaving(false);
+            return;
+          }
+        } catch (shareErr) {
+          console.log('Sharing failed, falling back to download', shareErr);
+        }
+      }
+
+      // Fallback to traditional download
+      const link = document.createElement('a');
+      link.download = fileName;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Secondary fallback for some mobile browsers that don't trigger download well
+      // Open the image in a new tab so they can see it and long-press to save
+      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const newWindow = window.open();
+        if (newWindow) {
+          newWindow.document.write(`<img src="${dataUrl}" style="width:100%" />`);
+          newWindow.document.write('<p style="text-align:center;font-family:sans-serif;margin-top:20px;">↑ Long-press image to save to your photos / 꾹 눌러서 사진첩에 저장하세요</p>');
+        }
+      }
     } catch (err) {
       console.error('Error generating certificate', err);
     } finally {
@@ -407,46 +479,57 @@ export default function App() {
 
   return (
     <div 
-      className="fixed inset-0 bg-slate-50 font-sans text-slate-800 overflow-hidden flex flex-col items-center justify-center select-none"
+      className={`fixed inset-0 bg-slate-50 font-sans text-slate-800 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center sm:justify-center select-none ${state === 'CERTIFICATE' ? 'styled-scrollbar' : 'no-scrollbar'}`}
     >
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{
+          backgroundImage: "url('/background.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      />
+      {/* Global Sound & Home Toggle - Outside AnimatePresence for stability */}
+      {state !== 'LANG_SELECT' && (
+        <div className="fixed top-6 right-6 z-[100] flex gap-2">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => {
+              setState('LANG_SELECT');
+              setBuiltParts([]);
+              setUserName('');
+              setCurrentQuestionIndex(0);
+              if (window.speechSynthesis) window.speechSynthesis.cancel();
+            }}
+            className="p-3 rounded-full bg-white/80 backdrop-blur border border-slate-200 shadow-lg text-slate-600 hover:text-blue-900 transition-colors"
+            id="btn-home"
+            key="btn-home"
+          >
+            <Home size={24} />
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => {
+              const newMuted = !isMuted;
+              setIsMuted(newMuted);
+              if (newMuted && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+              }
+            }}
+            className="p-3 rounded-full bg-white/80 backdrop-blur border border-blue-100 shadow-lg text-blue-900"
+            id="btn-mute-toggle"
+            key="btn-mute"
+          >
+            {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+          </motion.button>
+        </div>
+      )}
+
+      <div className="relative z-10 w-full min-h-full flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
-        
-        {/* Global Sound & Home Toggle */}
-        {state !== 'LANG_SELECT' && (
-          <div className="fixed top-6 right-6 z-[100] flex gap-2">
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={() => {
-                setState('LANG_SELECT');
-                setBuiltParts([]);
-                setUserName('');
-                setCurrentQuestionIndex(0);
-                if (window.speechSynthesis) window.speechSynthesis.cancel();
-              }}
-              className="p-3 rounded-full bg-white/80 backdrop-blur border border-slate-200 shadow-lg text-slate-600 hover:text-blue-900 transition-colors"
-              id="btn-home"
-            >
-              <Home size={24} />
-            </motion.button>
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={() => {
-                const newMuted = !isMuted;
-                setIsMuted(newMuted);
-                if (newMuted && window.speechSynthesis) {
-                  window.speechSynthesis.cancel();
-                }
-              }}
-              className="p-3 rounded-full bg-white/80 backdrop-blur border border-blue-100 shadow-lg text-blue-900"
-              id="btn-mute-toggle"
-            >
-              {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
-            </motion.button>
-          </div>
-        )}
         
         {/* 1. LANGUAGE SELECTION */}
         {state === 'LANG_SELECT' && (
@@ -474,26 +557,38 @@ export default function App() {
               </span>
             </h1>
             <div className="flex flex-col gap-4 w-full max-w-xs">
-              <button 
-                onClick={() => { setLang('ko'); setState('INTRO'); }}
-                className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold hover:scale-105 transition-transform"
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { 
+                  setLang('ko'); 
+                  setState('INTRO'); 
+                  if (!isMuted) soundService.setEnabled(true);
+                }}
+                className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold shadow-lg"
                 id="btn-ko"
               >
                 한국어
-              </button>
-              <button 
-                onClick={() => { setLang('en'); setState('INTRO'); }}
-                className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold hover:scale-105 transition-transform"
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { 
+                  setLang('en'); 
+                  setState('INTRO'); 
+                  if (!isMuted) soundService.setEnabled(true);
+                }}
+                className="bg-blue-700 text-white py-4 rounded-2xl text-xl font-bold shadow-lg"
                 id="btn-en"
               >
                 English
-              </button>
+              </motion.button>
             </div>
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.8 }}
-              className="mt-12 text-sm sm:text-base text-[#4169E1] font-light tracking-tight"
+              className="mt-12 text-[10px] sm:text-xs text-[#4169E1] font-bold tracking-wider bg-white/30 px-4 py-1.5 rounded-full backdrop-blur-sm"
             >
                Developed by: JULLIE JEONG, POSCO PR Section
             </motion.div>
@@ -534,13 +629,13 @@ export default function App() {
             key="map-pohang"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full p-6 flex flex-col items-center justify-between"
+            className="w-full min-h-full p-6 flex flex-col items-center justify-center gap-8 py-12"
           >
             <header className="w-full flex justify-between items-center">
                <h2 className="text-xl font-bold text-blue-900">1. {texts.pohang.name}</h2>
             </header>
             
-            <div className="relative w-full aspect-square max-w-md bg-transparent rounded-3xl p-4 overflow-hidden border-4 border-blue-100/50">
+            <div className="relative w-full aspect-square max-w-md bg-transparent overflow-hidden">
                <KoreaMap activeLocation="pohang" />
             </div>
 
@@ -565,12 +660,16 @@ export default function App() {
             key="quest"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full flex flex-col"
+            className="w-full min-h-full flex flex-col"
           >
             {/* Visual Header: Factory Progress */}
             <div className="h-2/5 bg-slate-100/30 relative overflow-hidden flex items-end justify-center pb-4">
               <div className="absolute inset-x-0 bottom-0 h-4 bg-slate-300"></div>
-              <FactoryBuilding currentParts={builtParts} stage={state === 'QUEST_POHANG' ? 'pohang' : 'gwangyang'} />
+              <FactoryBuilding 
+                currentParts={builtParts} 
+                stage={state === 'QUEST_POHANG' ? 'pohang' : 'gwangyang'} 
+                lang={lang}
+              />
               
               <div className="absolute top-4 left-4 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-sm font-bold border border-blue-200">
                 {state === 'QUEST_POHANG' ? "POHANG" : "GWANGYANG"}
@@ -578,7 +677,20 @@ export default function App() {
             </div>
 
             {/* Quiz Content */}
-            <div className="flex-1 p-6 bg-white/80 backdrop-blur-sm rounded-t-3xl -mt-6 z-10 shadow-2xl flex flex-col justify-between">
+            <div 
+              className="flex-1 p-6 bg-white/85 backdrop-blur-sm rounded-t-3xl -mt-6 z-10 shadow-2xl flex flex-col justify-between relative overflow-hidden"
+              style={
+                state === 'QUEST_GWANGYANG' ? {
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('/Gwangyangworks.png')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                } : state === 'QUEST_POHANG' ? {
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('/Pohangworks.png')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                } : {}
+              }
+            >
               <div>
                 <QuestionProgress current={currentQuestionIndex + 1} total={3} />
                 <h3 className="text-xl font-bold mt-4 leading-snug">
@@ -588,8 +700,10 @@ export default function App() {
 
               <div className="grid gap-3 mb-4">
                 {(state === 'QUEST_POHANG' ? texts.pohang : texts.gwangyang).quest[currentQuestionIndex].options.map((opt, i) => (
-                  <button
+                  <motion.button
                     key={i}
+                    whileHover={{ x: 5, scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       if (opt.isCorrect) handleCorrect();
                       else setShowFeedback('incorrect');
@@ -604,7 +718,7 @@ export default function App() {
                     >
                       <ChevronRight size={18} />
                     </motion.div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
 
@@ -621,7 +735,32 @@ export default function App() {
                       {showFeedback === 'correct' ? (
                         <>
                           <div className="relative">
-                            <Trophy size={80} className="text-blue-900 drop-shadow-lg" />
+                            <motion.div
+                              animate={{ 
+                                scale: [1, 1.2, 1],
+                                rotate: [0, 10, -10, 0]
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              <Trophy size={80} className="text-blue-900 drop-shadow-lg" />
+                            </motion.div>
+                            {/* Celebration particles */}
+                            {[...Array(6)].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ 
+                                  opacity: [0, 1, 0], 
+                                  scale: [0, 1, 0.5],
+                                  x: Math.cos(i * 60 * Math.PI / 180) * 80,
+                                  y: Math.sin(i * 60 * Math.PI / 180) * 80,
+                                }}
+                                transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                                className="absolute top-1/2 left-1/2 text-yellow-400"
+                              >
+                                <Star size={24} fill="currentColor" />
+                              </motion.div>
+                            ))}
                             <motion.div
                               initial={{ scale: 0, rotate: -20 }}
                               animate={{ scale: 1, rotate: 0 }}
@@ -665,32 +804,44 @@ export default function App() {
         )}
 
         {/* 5. SUCCESS SHOWCASE SCREENS */}
-        <AnimatePresence>
-          {(state === 'SUCCESS_POHANG' || state === 'SUCCESS_GWANGYANG') && (
+        {(state === 'SUCCESS_POHANG' || state === 'SUCCESS_GWANGYANG') && (
+          <motion.div 
+            key="completion-view"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="fixed inset-0 z-[110] bg-white flex flex-col items-center justify-start md:justify-center p-6 overflow-y-auto overflow-x-hidden pt-12 pb-12"
+          >
+            <div 
+              className="absolute inset-0 -z-10" 
+              style={
+                state === 'SUCCESS_POHANG' ? {
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('/Pohangworks.png')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                } : {
+                  backgroundImage: "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('/Gwangyangworks.png')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }
+              }
+            />
+            
             <motion.div 
-              key="completion-view"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              className="fixed inset-0 z-[110] bg-white flex flex-col items-center justify-center p-6"
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              className="text-center mb-6 sm:mb-8"
             >
-              <div className="absolute inset-0 bg-blue-50/30 -z-10" />
-              
-              <motion.div 
-                initial={{ y: -20 }}
-                animate={{ y: 0 }}
-                className="text-center mb-6 sm:mb-8"
-              >
-                <div className="inline-block bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-xs sm:text-sm font-black mb-2 tracking-widest">
-                  {lang === 'en' ? "COMPLETED!" : "완성되었습니다!"}
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-blue-900 leading-tight">
-                  {state === 'SUCCESS_POHANG' ? texts.pohang.name : texts.gwangyang.name}
-                </h2>
-                <p className="text-slate-500 font-medium mt-1 sm:mt-2 text-sm">
-                  {lang === 'en' ? "You've successfully built the core facilities!" : "핵심 설비들을 성공적으로 지었습니다!"}
-                </p>
-              </motion.div>
+              <div className="inline-block bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-xs sm:text-sm font-black mb-2 tracking-widest">
+                {lang === 'en' ? "COMPLETED!" : "완성되었습니다!"}
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-blue-900 leading-tight">
+                {state === 'SUCCESS_POHANG' ? texts.pohang.name : texts.gwangyang.name}
+              </h2>
+              <p className="text-slate-500 font-medium mt-1 sm:mt-2 text-sm">
+                {lang === 'en' ? "You've successfully built the core facilities!" : "핵심 설비들을 성공적으로 지었습니다!"}
+              </p>
+            </motion.div>
 
               <div className="w-full max-w-lg bg-white/50 backdrop-blur-sm rounded-[32px] sm:rounded-[40px] p-4 sm:p-8 border-2 border-blue-100 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-full blur-3xl -mr-10 -mt-10" />
@@ -701,38 +852,38 @@ export default function App() {
                     currentParts={builtParts} 
                     stage={state === 'SUCCESS_POHANG' ? 'pohang' : 'gwangyang'} 
                     large 
+                    lang={lang}
                   />
                 </div>
               </div>
 
               <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-8 sm:mt-12 flex flex-col items-center gap-4"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 sm:mt-12 flex flex-col items-center gap-4"
+            >
+              <button 
+                onClick={() => {
+                  if (state === 'SUCCESS_POHANG') {
+                    setState('MAP_GWANGYANG');
+                    setCurrentQuestionIndex(0);
+                  } else {
+                    setState('NAME_ENTRY');
+                  }
+                }}
+                className="bg-blue-800 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl font-black shadow-[0_10px_20px_rgba(0,75,147,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                id="btn-completion-continue"
               >
-                <button 
-                  onClick={() => {
-                    if (state === 'SUCCESS_POHANG') {
-                      setState('MAP_GWANGYANG');
-                      setCurrentQuestionIndex(0);
-                    } else {
-                      setState('NAME_ENTRY');
-                    }
-                  }}
-                  className="bg-blue-800 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl sm:rounded-3xl text-xl sm:text-2xl font-black shadow-[0_10px_20px_rgba(0,75,147,0.3)] hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
-                  id="btn-completion-continue"
-                >
-                  {lang === 'en' ? "Continue Quest" : "퀘스트 계속하기"}
-                  <ChevronRight size={24} />
-                </button>
-                <p className="text-slate-400 text-sm font-bold animate-pulse">
-                  {lang === 'en' ? "Amazing Builder Progress!" : "놀라운 건축 실력입니다!"}
-                </p>
-              </motion.div>
+                {lang === 'en' ? "Continue Quest" : "퀘스트 계속하기"}
+                <ChevronRight size={24} />
+              </button>
+              <p className="text-slate-400 text-sm font-bold animate-pulse">
+                {lang === 'en' ? "Amazing Builder Progress!" : "놀라운 건축 실력입니다!"}
+              </p>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* 6. MAP GWANGYANG */}
         {state === 'MAP_GWANGYANG' && (
@@ -740,13 +891,13 @@ export default function App() {
             key="map-gwangyang"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full p-6 flex flex-col items-center justify-between"
+            className="w-full min-h-full p-6 flex flex-col items-center justify-center gap-8 py-12"
           >
             <header className="w-full flex justify-between items-center">
                <h2 className="text-xl font-bold text-blue-900">2. {texts.gwangyang.name}</h2>
             </header>
             
-            <div className="relative w-full aspect-square max-w-md bg-transparent rounded-3xl p-4 overflow-hidden border-4 border-blue-100/50">
+            <div className="relative w-full aspect-square max-w-md bg-transparent overflow-hidden">
                <KoreaMap activeLocation="gwangyang" prevLocation="pohang" />
             </div>
 
@@ -771,13 +922,13 @@ export default function App() {
             key="name-entry"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-8 max-w-sm w-full space-y-6 flex flex-col items-center"
+            className="p-8 max-w-sm w-full min-h-full space-y-6 flex flex-col items-center justify-center py-12"
           >
              <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }}>
                <Award size={80} color={COLORS.blue} />
              </motion.div>
              <div className="text-center">
-               <h2 className="text-2xl font-bold text-blue-900">{lang === 'en' ? "You are a Master Builder!" : "당신은 마스터 빌더입니다!"}</h2>
+               <h2 className="text-2xl font-bold text-blue-900">{lang === 'en' ? "You are a Posco Junior Master Builder!" : "당신은 포스코 주니어 마스터 빌더입니다!"}</h2>
                <p className="text-slate-500 mt-2">{lang === 'en' ? "Please enter your name for the certificate" : "수료증을 위해 이름을 입력해주세요"}</p>
              </div>
              <input 
@@ -807,7 +958,7 @@ export default function App() {
             key="certificate"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full h-full p-4 flex flex-col items-center justify-center bg-transparent"
+            className="w-full min-h-full p-4 flex flex-col items-center justify-start md:justify-center bg-transparent py-12 styled-scrollbar"
           >
             {/* The actual certificate for export - Added hover effect */}
             <motion.div 
@@ -869,12 +1020,8 @@ export default function App() {
                     <span className="text-[8px] font-bold text-slate-400">{texts.certificate.seal}</span>
                   </div>
                   
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="font-serif italic text-2xl text-blue-900 transform -rotate-3 mb-1">
-                      {texts.signature || texts.certificate.signature}
-                    </div>
-                    <div className="w-24 h-[1px] bg-slate-300"></div>
-                    <span className="text-[8px] font-bold text-slate-400 capitalize">{lang === 'en' ? "Chairman" : "회장"}</span>
+                  <div className="flex flex-col items-center gap-1 opacity-0 pointer-events-none">
+                    {/* Placeholder to keep layout balance if needed, or just remove */}
                   </div>
                 </div>
 
@@ -911,22 +1058,24 @@ export default function App() {
                     <RefreshCw size={20} />
                   </motion.div>
                 ) : (
-                  <Download size={20} />
+                  <Share2 size={20} />
                 )}
-                {isSaving ? (lang === 'ko' ? '저장 중...' : 'Saving...') : texts.certificate.download}
+                {isSaving ? (lang === 'ko' ? '저장 중...' : 'Saving...') : (lang === 'ko' ? '수료증 저장/공유하기' : 'Save / Share Certificate')}
               </motion.button>
               <motion.button 
-                whileHover={{ scale: 1.05, backgroundColor: '#cbd5e1' }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setState('LANG_SELECT');
                   setBuiltParts([]);
                   setUserName('');
                   setCurrentQuestionIndex(0);
+                  if (window.speechSynthesis) window.speechSynthesis.cancel();
                 }}
-                className="bg-slate-200 text-slate-600 p-4 rounded-xl font-bold transition-colors"
+                className="bg-white text-blue-900 border-2 border-blue-900 p-4 rounded-xl font-black flex items-center justify-center gap-2 shadow-md transition-colors hover:bg-blue-50"
                 id="btn-restart"
               >
+                <RefreshCw size={20} />
                 {texts.certificate.restart}
               </motion.button>
             </div>
@@ -1029,16 +1178,16 @@ function Dialogue({ text, sm }: { text: string; sm?: boolean }) {
 
 function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' | 'gwangyang'; prevLocation?: 'pohang' }) {
   return (
-    <div className="w-full h-full relative bg-transparent overflow-hidden rounded-2xl flex items-center justify-center p-0">
+    <div className="w-full h-full relative bg-transparent flex items-center justify-center p-0">
       <motion.div 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative w-full h-full flex items-center justify-center"
       >
-        <svg viewBox="0 0 100 120" className="h-full w-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        <svg viewBox="0 0 100 120" className="h-full w-full">
           {/* Scaled Korea Map Image */}
           <image 
-            href="/korean%20map.png" 
+            href="/korean_map.png" 
             x="-5" y="-5" 
             width="110" height="130" 
             preserveAspectRatio="xMidYMid slice" 
@@ -1113,12 +1262,74 @@ function KoreaMap({ activeLocation, prevLocation }: { activeLocation: 'pohang' |
   );
 }
 
-function FactoryBuilding({ currentParts, stage, large }: { currentParts: string[]; stage: 'pohang' | 'gwangyang'; large?: boolean }) {
+function Gears({ size = 20, color = COLORS.grey }: { size?: number, color?: string }) {
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+      className="text-slate-400 opacity-60"
+    >
+      <Settings size={size} color={color} />
+    </motion.div>
+  );
+}
+
+function SteamEffect() {
+  return (
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-visible">
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ y: 20, x: -10 + i * 10, opacity: 0, scale: 0.5 }}
+          animate={{ 
+            y: [-20, -60], 
+            opacity: [0, 0.4, 0],
+            scale: [0.5, 1.2],
+            x: [-10 + i * 10, -20 + i * 20]
+          }}
+          transition={{ 
+            duration: 2 + i, 
+            repeat: Infinity, 
+            delay: i * 0.8,
+            ease: "easeOut"
+          }}
+          className="absolute w-8 h-8 rounded-full bg-slate-200/40 blur-md"
+        />
+      ))}
+    </div>
+  );
+}
+
+function FactoryBuilding({ currentParts, stage, large, lang }: { currentParts: string[]; stage: 'pohang' | 'gwangyang'; large?: boolean; lang: Language }) {
   const allParts = [
-    { id: 'furnace', img: '/Blast%20Furnace.png', icon: Factory, color: '#475569', label: 'Blast Furnace' },
-    { id: 'mill', img: '/Basic%20Oxygen%20Furnace.png', icon: Settings, color: '#334155', label: 'Basic Oxygen Furnace' },
-    { id: 'port', img: '/Rolling%20Mill.png', icon: Ship, color: '#0f172a', label: 'Rolling Mill' },
-    { id: 'bridge', img: '/Rolling%20Mill.png', icon: Building2, color: '#1e293b', label: 'Rolling Mill' }
+    { 
+      id: 'furnace', 
+      img: '/Blast%20Furnace.png', 
+      icon: Factory, 
+      color: '#475569', 
+      label: lang === 'en' ? 'Blast Furnace' : '고로'
+    },
+    { 
+      id: 'mill', 
+      img: '/Basic%20Oxygen%20Furnace.png', 
+      icon: Settings, 
+      color: '#334155', 
+      label: lang === 'en' ? 'Basic Oxygen Furnace' : '제강'
+    },
+    { 
+      id: 'port', 
+      img: '/Rolling%20Mill.png', 
+      icon: Ship, 
+      color: '#0f172a', 
+      label: lang === 'en' ? 'Rolling Mill' : '압연'
+    },
+    { 
+      id: 'bridge', 
+      img: '/Rolling%20Mill.png', 
+      icon: Building2, 
+      color: '#1e293b', 
+      label: lang === 'en' ? 'Rolling Mill' : '압연'
+    }
   ];
 
   const stageParts = stage === 'pohang' 
@@ -1138,20 +1349,48 @@ function FactoryBuilding({ currentParts, stage, large }: { currentParts: string[
           <motion.div
             key={part.id}
             initial={{ scale: 0, y: 100, opacity: 0 }}
-            animate={shouldShow ? { scale: 1, y: 0, opacity: 1 } : { scale: 0, y: 100, opacity: 0 }}
+            animate={shouldShow ? { 
+              scale: 1, 
+              y: 0, 
+              opacity: 1,
+              transition: { type: 'spring', damping: 15, stiffness: 100 }
+            } : { scale: 0, y: 100, opacity: 0 }}
             className="flex flex-col items-center"
           >
             <div 
-              className={`${large ? 'w-24 h-32 sm:w-32 sm:h-44 p-2 sm:p-4' : 'w-20 h-28 p-2'} flex items-center justify-center rounded-xl bg-white/40 backdrop-blur-sm border border-white/50 shadow-lg`}
+              className={`${large ? 'w-24 h-32 sm:w-32 sm:h-44 p-2 sm:p-4' : 'w-20 h-28 p-2'} flex items-center justify-center rounded-xl bg-white/40 backdrop-blur-sm border border-white/50 shadow-lg relative`}
             >
               <img 
                 src={part.img} 
                 alt={part.label}
-                className="w-full h-full object-contain drop-shadow-md"
+                className="w-full h-full object-contain drop-shadow-md z-10"
                 referrerPolicy="no-referrer"
               />
+              
+              {/* Dynamic Industrial Effects */}
+              {shouldShow && (
+                <>
+                  <div className="absolute top-2 left-2 z-0">
+                    <Gears size={large ? 24 : 16} />
+                  </div>
+                  <div className="absolute bottom-2 right-2 z-0">
+                    <Gears size={large ? 20 : 12} />
+                  </div>
+                  {(part.id === 'furnace' || part.id === 'mill') && <SteamEffect />}
+                </>
+              )}
+
+              {/* Sparkle effect on newly built */}
+              {isThisPartBuilt && !large && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="absolute inset-0 border-2 border-blue-400 rounded-xl pointer-events-none"
+                />
+              )}
             </div>
-            <div className={`${large ? 'text-[10px] sm:text-[12px] mt-2 sm:mt-3' : 'text-[10px] mt-2'} font-black text-blue-900 uppercase leading-tight text-center max-w-[60px] sm:max-w-[80px] drop-shadow-sm`}>
+            <div className={`${large ? (lang === 'ko' ? 'text-[13px] sm:text-[16px]' : 'text-[10px] sm:text-[12px]') : (lang === 'ko' ? 'text-[12px]' : 'text-[10px]')} mt-2 ${large ? 'sm:mt-3' : ''} font-black text-blue-900 uppercase leading-tight text-center max-w-[80px] drop-shadow-sm`}>
               {part.label}
             </div>
           </motion.div>

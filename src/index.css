@@ -24,3 +24,27 @@ body {
 .certificate-border {
   border-image: repeating-linear-gradient(45deg, #004b93, #004b93 10px, #ffffff 10px, #ffffff 20px) 20;
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.styled-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(135, 206, 235, 0.6); /* Sky blue (87CEEB) with 60% opacity */
+  border-radius: 10px;
+}
